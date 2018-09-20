@@ -1,12 +1,16 @@
 package main
 
 import (
+	"core/constant"
+	"core/entity"
+	"core/service"
+	"core/util"
 	"fmt"
 	"net"
 	"os"
 )
 
-var clients []net.Conn
+var userMap map[string]*entity.UserInfo
 
 func main() {
 	var (
@@ -16,6 +20,8 @@ func main() {
 		data   = make([]byte, 1024)
 	)
 	fmt.Println("Initiating server...")
+
+	userMap = make(map[string]*entity.UserInfo)
 
 	lis, err := net.Listen("tcp", remote)
 	defer lis.Close()
@@ -32,7 +38,6 @@ func main() {
 			fmt.Println("Error accepting client: ", err.Error())
 			os.Exit(0)
 		}
-		clients = append(clients, conn)
 
 		go func(con net.Conn) {
 			fmt.Println("New connection: ", con.RemoteAddr())
@@ -40,62 +45,48 @@ func main() {
 			// Get client's name
 			length, err := con.Read(data)
 			if err != nil {
-				fmt.Printf("Client %v quit.\n", con.RemoteAddr())
+				fmt.Printf("断开连接 %v .\n", con.RemoteAddr())
 				con.Close()
-				disconnect(con, con.RemoteAddr().String())
 				return
 			}
-			name := string(data[:length])
-			comeStr := name + " entered the room."
-			notify(con, comeStr)
 
-			// Begin recieve message from client
+			receive := string(data[:length])
+
+			command, err := util.GetCommon(receive)
+			if err != nil || command.Action != constant.ACTION_UP_LOGIN { //第一道指令必须是LOGIN
+				service.SendError(con, "第一道指令必须是LOGIN")
+				fmt.Printf("断开连接:指令不对 %v .\n", con.RemoteAddr())
+				con.Close()
+				return
+			}
+
+			name := command.Content
+
+			if userInfo, ok := userMap[name]; ok { //存在
+				fmt.Printf("重新登陆: %s .\n", name)
+				service.Disconnect(userInfo, userMap)
+			}
+
+			userInfo := entity.UserInfo{UserID: name, Status: true, Conn: con}
+
+			//新用户接入
+			userMap[name] = &userInfo
+
+			//回传通知
+			service.Send(con, entity.Command{Content: "true", Action: command.Action})
+
+			// 开始从客户端接收消息
 			for {
 				length, err := con.Read(data)
 				if err != nil {
-					fmt.Printf("Client %s quit.\n", name)
-					con.Close()
-					disconnect(con, name)
+					service.Disconnect(&userInfo, userMap)
 					return
 				}
+
 				res = string(data[:length])
-				sprdMsg := name + " said: " + res
-				fmt.Println(sprdMsg)
-				res = "You said:" + res
-				con.Write([]byte(res))
-				notify(con, sprdMsg)
+
+				service.DoAction(&userInfo, res, userMap)
 			}
 		}(conn)
-	}
-}
-
-//广播
-func notify(conn net.Conn, msg string) {
-	for _, con := range clients {
-		if con.RemoteAddr() != conn.RemoteAddr() {
-			con.Write([]byte(msg))
-		}
-	}
-}
-
-func sendToClient(conn net.Conn, msg string) {
-
-}
-
-func disconnect(conn net.Conn, name string) {
-	for index, con := range clients {
-		if con.RemoteAddr() == conn.RemoteAddr() {
-			disMsg := name + " has left the room."
-			fmt.Println(disMsg)
-			clients = append(clients[:index], clients[index+1:]...)
-			notify(conn, disMsg)
-		}
-	}
-}
-
-func CheckErr(err error) {
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Fatal error: %s", err.Error())
-		os.Exit(1)
 	}
 }

@@ -1,0 +1,15 @@
+package constant
+
+// CONST_SPLITTER 指令分隔符
+// ACTION_UP_LOGIN 上行指令登陆
+const (
+	CONST_SPLITTER = "#"
+
+	ACTION_UP_LOGIN = "LOGIN"
+	ACTION_UP_CALL  = "CALL"
+	ACTION_UP_OFF   = "OFF"
+
+	ACTION_DOWN_SUBSCRIBE = "SUBSCRIBE"
+	ACTION_DOWN_CUT       = "CUT"
+	ACTION_DOWN_ERROR     = "ERROR"
+)

@@ -84,6 +84,9 @@ func DoAction(userInfo *entity.UserInfo, res string, userMap map[string]*entity.
 
 }
 
+//SendError 下发错误信息
+//conn
+//msg
 func SendError(conn net.Conn, msg string) {
 	command := entity.Command{Action: constant.ACTION_DOWN_ERROR, Content: msg}
 	Send(conn, command)
@@ -135,12 +138,17 @@ func doCall(userInfo *entity.UserInfo, targetUserID string, userMap map[string]*
 			doSubscribe(targetUserInfo, userInfo.UserID)
 			return
 		}
+
+		fmt.Printf("CALL FAIL: %s Busy.\n", targetUserID)
+
+	} else {
+		fmt.Printf("CALL FAIL: %s Offline.\n", targetUserID)
 	}
 
 	//忙线中 或拒绝
 	command := entity.Command{Action: constant.ACTION_UP_CALL, Content: "false"}
 	Send(userInfo.Conn, command)
-	fmt.Printf("CALL FAIL: %s TO %s.\n", userInfo.UserID, targetUserInfo.UserID)
+	fmt.Printf("CALL FAIL: %s TO %s.\n", userInfo.UserID, targetUserID)
 
 }
 

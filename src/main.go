@@ -1,6 +1,7 @@
 package main
 
 import (
+	"core/conf"
 	"core/constant"
 	"core/entity"
 	"core/service"
@@ -13,15 +14,19 @@ import (
 var userMap map[string]*entity.UserInfo
 
 func main() {
-	var (
-		host   = "localhost"
-		port   = "8000"
-		remote = host + ":" + port
-		data   = make([]byte, 1024)
-	)
+
 	fmt.Println("Initiating server...")
 
+	//导入配置文件
+	configMap := conf.InitConfig("./config.lua")
+
 	userMap = make(map[string]*entity.UserInfo)
+
+	host := configMap["host"]
+	port := configMap["port"]
+
+	remote := host + ":" + port
+	data := make([]byte, 1024)
 
 	lis, err := net.Listen("tcp", remote)
 	defer lis.Close()

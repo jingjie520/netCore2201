@@ -6,7 +6,7 @@ import (
 	"core/entity"
 	"core/service"
 	"core/util"
-	"fmt"
+	"core/util/logUtil"
 	"net"
 	"os"
 )
@@ -14,8 +14,7 @@ import (
 var userMap map[string]*entity.UserInfo
 
 func main() {
-
-	fmt.Println("Initiating server...")
+	logUtil.LOG_INFO("Service Initiating.")
 
 	//导入配置文件
 	configMap := conf.InitConfig("./config.lua")
@@ -26,13 +25,16 @@ func main() {
 	port := configMap["port"]
 
 	remote := host + ":" + port
+
 	data := make([]byte, 1024)
 
 	lis, err := net.Listen("tcp", remote)
 	defer lis.Close()
 
+	logUtil.LOG_INFO("Service Run AT %s.", remote)
+
 	if err != nil {
-		fmt.Printf("Error when listen: %s, Err: %s\n", remote, err)
+		logUtil.LOG_ERROR("Error when listen: %s, Err: %s\n", remote, err)
 		os.Exit(-1)
 	}
 
@@ -40,17 +42,17 @@ func main() {
 		var res string
 		conn, err := lis.Accept()
 		if err != nil {
-			fmt.Println("Error accepting client: ", err.Error())
+			logUtil.LOG_ERROR("Error accepting client: ", err.Error())
 			os.Exit(0)
 		}
 
 		go func(con net.Conn) {
-			fmt.Println("New connection: ", con.RemoteAddr())
+			logUtil.LOG_INFO("New connection: %v.", con.RemoteAddr())
 
 			// Get client's name
 			length, err := con.Read(data)
 			if err != nil {
-				fmt.Printf("断开连接 %v .\n", con.RemoteAddr())
+				logUtil.LOG_INFO("Offline : %v.", con.RemoteAddr())
 				con.Close()
 				return
 			}
@@ -59,8 +61,8 @@ func main() {
 
 			command, err := util.GetCommon(receive)
 			if err != nil || command.Action != constant.ACTION_UP_LOGIN { //第一道指令必须是LOGIN
+				logUtil.LOG_INFO("Close connection : %v.", con.RemoteAddr())
 				service.SendError(con, "第一道指令必须是LOGIN")
-				fmt.Printf("断开连接:指令不对 %v .\n", con.RemoteAddr())
 				con.Close()
 				return
 			}
@@ -68,7 +70,7 @@ func main() {
 			name := command.Content
 
 			if userInfo, ok := userMap[name]; ok { //存在
-				fmt.Printf("重新登陆: %s .\n", name)
+				logUtil.LOG_INFO("Rest Login : %s.", name)
 				service.Disconnect(userInfo, userMap)
 			}
 

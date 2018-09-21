@@ -4,6 +4,7 @@ import (
 	"core/constant"
 	"core/entity"
 	"core/util"
+	"core/util/logUtil"
 	"fmt"
 	"net"
 )
@@ -18,10 +19,10 @@ func Disconnect(userInfo *entity.UserInfo, userMap map[string]*entity.UserInfo) 
 		doCutByuserID(userInfo.TargetUserID, userMap)
 	}
 
-	//断开本身
+	logUtil.LOG_INFO("User Offline:%s.", userInfo.UserID)
+	// 断开连接
 	userInfo.Conn.Close()
 	delete(userMap, userInfo.UserID)
-	fmt.Printf("用户离线 %s .\n", userInfo.UserID) // 断开连接
 }
 
 //doCutByuserID 通话被挂断
@@ -36,7 +37,7 @@ func doCutByuserID(userID string, userMap map[string]*entity.UserInfo) {
 
 func doCut(userInfo *entity.UserInfo, userMap map[string]*entity.UserInfo) {
 	if !userInfo.Status {
-		fmt.Printf("CUT %s TO %s\n", userInfo.UserID, userInfo.TargetUserID)
+		logUtil.LOG_INFO("CUT %s TO %s\n", userInfo.UserID, userInfo.TargetUserID)
 		command := entity.Command{Action: constant.ACTION_DOWN_CUT, Content: userInfo.TargetUserID}
 		Send(userInfo.Conn, command)
 
@@ -75,10 +76,10 @@ func DoAction(userInfo *entity.UserInfo, res string, userMap map[string]*entity.
 		doSubscribeCallback(userInfo, command.Content, userMap)
 
 	case constant.ACTION_DOWN_CUT:
-		fmt.Printf("DoAction不处理该指令:%s\n", command.Action)
+		logUtil.LOG_INFO("DoAction不处理该指令:%s\n", command.Action)
 
 	default:
-		fmt.Printf("DoAction不支持该指令:%s\n", command.Action)
+		logUtil.LOG_INFO("DoAction不支持该指令:%s\n", command.Action)
 		SendError(userInfo.Conn, "不被支持的指令\n")
 	}
 
@@ -94,7 +95,7 @@ func SendError(conn net.Conn, msg string) {
 
 func doOff(userInfo *entity.UserInfo, targetUserID string, userMap map[string]*entity.UserInfo) {
 
-	fmt.Printf("OFF %s TO %s\n", userInfo.UserID, targetUserID)
+	logUtil.LOG_INFO("OFF %s TO %s\n", userInfo.UserID, targetUserID)
 
 	targetUserInfo, ok := userMap[targetUserID]
 	if ok {
@@ -110,7 +111,7 @@ func doOff(userInfo *entity.UserInfo, targetUserID string, userMap map[string]*e
 
 func doSubscribeCallback(userInfo *entity.UserInfo, res string, userMap map[string]*entity.UserInfo) {
 
-	fmt.Printf("SUBSCRIBE CALLBACK: %s TO %s Sey %s.\n", userInfo.UserID, userInfo.TargetUserID, res)
+	logUtil.LOG_INFO("SUBSCRIBE CALLBACK: %s TO %s Sey %s.\n", userInfo.UserID, userInfo.TargetUserID, res)
 
 	targetUserInfo, ok := userMap[userInfo.TargetUserID]
 	if ok {
@@ -118,14 +119,14 @@ func doSubscribeCallback(userInfo *entity.UserInfo, res string, userMap map[stri
 			//CALL 成功
 			command := entity.Command{Action: constant.ACTION_UP_CALL, Content: "true"}
 			doBilateralSubscribe(userInfo, targetUserInfo)
-			fmt.Printf("CALL SUCCEED: %s TO %s.\n", targetUserInfo.UserID, userInfo.UserID)
+			logUtil.LOG_INFO("CALL SUCCEED: %s TO %s.\n", targetUserInfo.UserID, userInfo.UserID)
 			Send(targetUserInfo.Conn, command)
 			return
 		}
 
 		command := entity.Command{Action: constant.ACTION_UP_CALL, Content: "false"}
 		Send(targetUserInfo.Conn, command)
-		fmt.Printf("CALL RETURN: %s  %s.\n", targetUserInfo.UserID, command.Content)
+		logUtil.LOG_INFO("CALL RETURN: %s  %s.\n", targetUserInfo.UserID, command.Content)
 	}
 }
 
@@ -139,23 +140,23 @@ func doCall(userInfo *entity.UserInfo, targetUserID string, userMap map[string]*
 			return
 		}
 
-		fmt.Printf("CALL FAIL: %s Busy.\n", targetUserID)
+		logUtil.LOG_INFO("CALL FAIL: %s Busy.\n", targetUserID)
 
 	} else {
-		fmt.Printf("CALL FAIL: %s Offline.\n", targetUserID)
+		logUtil.LOG_INFO("CALL FAIL: %s Offline.\n", targetUserID)
 	}
 
 	//忙线中 或拒绝
 	command := entity.Command{Action: constant.ACTION_UP_CALL, Content: "false"}
 	Send(userInfo.Conn, command)
-	fmt.Printf("CALL FAIL: %s TO %s.\n", userInfo.UserID, targetUserID)
+	logUtil.LOG_INFO("CALL FAIL: %s TO %s.\n", userInfo.UserID, targetUserID)
 
 }
 
 func doSubscribe(userInfo *entity.UserInfo, targetUserID string) {
 	command := entity.Command{Action: constant.ACTION_DOWN_SUBSCRIBE, Content: targetUserID}
 	Send(userInfo.Conn, command)
-	fmt.Printf("SUBSCRIBE : %s TO %s.\n", userInfo.UserID, targetUserID)
+	logUtil.LOG_INFO("SUBSCRIBE : %s TO %s.\n", userInfo.UserID, targetUserID)
 }
 
 func doBilateralSubscribe(userInfo *entity.UserInfo, targetUserInfo *entity.UserInfo) {

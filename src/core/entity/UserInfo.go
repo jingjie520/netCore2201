@@ -11,3 +11,17 @@ type UserInfo struct {
 	TargetUserID string
 	Conn         net.Conn
 }
+
+func (userInfo *UserInfo) SetTargetUserID(targetUserID string) {
+	userInfo.TargetUserID = targetUserID
+}
+
+func (userInfo *UserInfo) DoCall(targetUserID string) {
+	userInfo.Status = false
+	userInfo.TargetUserID = targetUserID
+}
+
+func (userInfo *UserInfo) DoOff() {
+	userInfo.Status = true
+	userInfo.TargetUserID = ""
+}

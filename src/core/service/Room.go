@@ -41,8 +41,7 @@ func doCut(userInfo *entity.UserInfo, userMap map[string]*entity.UserInfo) {
 		command := entity.Command{Action: constant.ACTION_DOWN_CUT, Content: userInfo.TargetUserID}
 		Send(userInfo.Conn, command)
 
-		userInfo.Status = true
-		userInfo.TargetUserID = ""
+		userInfo.DoOff()
 	}
 }
 
@@ -102,8 +101,7 @@ func doOff(userInfo *entity.UserInfo, targetUserID string, userMap map[string]*e
 		doCut(targetUserInfo, userMap)
 	}
 
-	userInfo.Status = true
-	userInfo.TargetUserID = ""
+	userInfo.DoOff()
 
 	command := entity.Command{Action: constant.ACTION_UP_OFF, Content: "true"}
 	Send(userInfo.Conn, command)
@@ -118,7 +116,10 @@ func doSubscribeCallback(userInfo *entity.UserInfo, res string, userMap map[stri
 		if res == "true" {
 			//CALL 成功
 			command := entity.Command{Action: constant.ACTION_UP_CALL, Content: "true"}
-			doBilateralSubscribe(userInfo, targetUserInfo)
+
+			userInfo.DoCall(targetUserInfo.UserID)
+			targetUserInfo.DoCall(userInfo.UserID)
+
 			logUtil.LOG_INFO("CALL SUCCEED: %s TO %s.\n", targetUserInfo.UserID, userInfo.UserID)
 			Send(targetUserInfo.Conn, command)
 			return
@@ -135,7 +136,8 @@ func doCall(userInfo *entity.UserInfo, targetUserID string, userMap map[string]*
 	targetUserInfo, ok := userMap[targetUserID]
 	if ok { //用户存在
 		if targetUserInfo.Status { //空闲中
-			targetUserInfo.TargetUserID = userInfo.UserID
+			targetUserInfo.SetTargetUserID(userInfo.UserID)
+
 			doSubscribe(targetUserInfo, userInfo.UserID)
 			return
 		}
@@ -157,12 +159,4 @@ func doSubscribe(userInfo *entity.UserInfo, targetUserID string) {
 	command := entity.Command{Action: constant.ACTION_DOWN_SUBSCRIBE, Content: targetUserID}
 	Send(userInfo.Conn, command)
 	logUtil.LOG_INFO("SUBSCRIBE : %s TO %s.\n", userInfo.UserID, targetUserID)
-}
-
-func doBilateralSubscribe(userInfo *entity.UserInfo, targetUserInfo *entity.UserInfo) {
-	userInfo.Status = false
-	userInfo.TargetUserID = targetUserInfo.UserID
-
-	targetUserInfo.Status = false
-	targetUserInfo.TargetUserID = userInfo.UserID
 }

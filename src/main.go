@@ -82,6 +82,8 @@ func main() {
 			//回传通知
 			service.Send(con, entity.Command{Content: "true", Action: command.Action})
 
+			logUtil.LOG_INFO("User Login done : %s.", name)
+
 			// 开始从客户端接收消息
 			for {
 				length, err := con.Read(data)

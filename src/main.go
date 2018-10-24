@@ -60,7 +60,7 @@ func main() {
 			receive := string(data[:length])
 
 			command, err := util.GetCommon(receive)
-			if err != nil || command.Action != constant.ACTION_UP_LOGIN { //第一道指令必须是LOGIN
+			if err != nil || command.Action != constant.ActionUpLogin { //第一道指令必须是LOGIN
 				logUtil.LOG_INFO("Close connection : %v.", con.RemoteAddr())
 				service.SendError(con, "第一道指令必须是LOGIN")
 				con.Close()

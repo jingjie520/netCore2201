@@ -1,15 +1,14 @@
 package constant
 
-// CONST_SPLITTER 指令分隔符
-// ACTION_UP_LOGIN 上行指令登陆
+/*
+常量
+*/
 const (
-	CONST_SPLITTER = "#"
-
-	ACTION_UP_LOGIN = "LOGIN"
-	ACTION_UP_CALL  = "CALL"
-	ACTION_UP_OFF   = "OFF"
-
-	ACTION_DOWN_SUBSCRIBE = "SUBSCRIBE"
-	ACTION_DOWN_CUT       = "CUT"
-	ACTION_DOWN_ERROR     = "ERROR"
+	Splitter            = "#"         // 指令分隔符
+	ActionUpLogin       = "LOGIN"     // 上行指令：登陆
+	ActionUpCall        = "CALL"      // 上行指令：呼叫
+	ActionUpOff         = "OFF"       // 上行指令：挂断
+	ActionDownSubscribe = "SUBSCRIBE" // 下行指令：订阅
+	ActionDownCut       = "CUT"       // 下行指令：挂断
+	ActionDownError     = "ERROR"     // 下行指令：报错
 )

@@ -38,7 +38,7 @@ func doCutByuserID(userID string, userMap map[string]*entity.UserInfo) {
 func doCut(userInfo *entity.UserInfo, userMap map[string]*entity.UserInfo) {
 	if !userInfo.Status {
 		logUtil.LOG_INFO("CUT %s TO %s\n", userInfo.UserID, userInfo.TargetUserID)
-		command := entity.Command{Action: constant.ACTION_DOWN_CUT, Content: userInfo.TargetUserID}
+		command := entity.Command{Action: constant.ActionDownCut, Content: userInfo.TargetUserID}
 		Send(userInfo.Conn, command)
 
 		userInfo.DoOff()
@@ -68,16 +68,16 @@ func DoAction(userInfo *entity.UserInfo, res string, userMap map[string]*entity.
 
 	//遍历指令
 	switch command.Action {
-	case constant.ACTION_UP_CALL:
+	case constant.ActionUpCall:
 		doCall(userInfo, command.Content, userMap)
 
-	case constant.ACTION_UP_OFF:
+	case constant.ActionUpOff:
 		doOff(userInfo, command.Content, userMap)
 
-	case constant.ACTION_DOWN_SUBSCRIBE:
+	case constant.ActionDownSubscribe:
 		doSubscribeCallback(userInfo, command.Content, userMap)
 
-	case constant.ACTION_DOWN_CUT:
+	case constant.ActionDownCut:
 		logUtil.LOG_INFO("DoAction不处理该指令:%s", command.Action)
 
 	default:
@@ -91,7 +91,7 @@ func DoAction(userInfo *entity.UserInfo, res string, userMap map[string]*entity.
 //conn
 //msg
 func SendError(conn net.Conn, msg string) {
-	command := entity.Command{Action: constant.ACTION_DOWN_ERROR, Content: msg}
+	command := entity.Command{Action: constant.ActionDownError, Content: msg}
 	Send(conn, command)
 }
 
@@ -106,7 +106,7 @@ func doOff(userInfo *entity.UserInfo, targetUserID string, userMap map[string]*e
 
 	userInfo.DoOff()
 
-	command := entity.Command{Action: constant.ACTION_UP_OFF, Content: "true"}
+	command := entity.Command{Action: constant.ActionUpOff, Content: "true"}
 	Send(userInfo.Conn, command)
 }
 
@@ -118,7 +118,7 @@ func doSubscribeCallback(userInfo *entity.UserInfo, res string, userMap map[stri
 	if ok {
 		if res == "true" {
 			//CALL 成功
-			command := entity.Command{Action: constant.ACTION_UP_CALL, Content: "true"}
+			command := entity.Command{Action: constant.ActionUpCall, Content: "true"}
 
 			userInfo.DoCall(targetUserInfo.UserID)
 			targetUserInfo.DoCall(userInfo.UserID)
@@ -128,7 +128,7 @@ func doSubscribeCallback(userInfo *entity.UserInfo, res string, userMap map[stri
 			return
 		}
 
-		command := entity.Command{Action: constant.ACTION_UP_CALL, Content: "false"}
+		command := entity.Command{Action: constant.ActionUpCall, Content: "false"}
 		Send(targetUserInfo.Conn, command)
 		logUtil.LOG_INFO("CALL RETURN: %s  %s.", targetUserInfo.UserID, command.Content)
 	}
@@ -152,14 +152,14 @@ func doCall(userInfo *entity.UserInfo, targetUserID string, userMap map[string]*
 	}
 
 	//忙线中 或拒绝
-	command := entity.Command{Action: constant.ACTION_UP_CALL, Content: "false"}
+	command := entity.Command{Action: constant.ActionUpCall, Content: "false"}
 	Send(userInfo.Conn, command)
 	logUtil.LOG_INFO("CALL FAIL: %s TO %s.", userInfo.UserID, targetUserID)
 
 }
 
 func doSubscribe(userInfo *entity.UserInfo, targetUserID string) {
-	command := entity.Command{Action: constant.ACTION_DOWN_SUBSCRIBE, Content: targetUserID}
+	command := entity.Command{Action: constant.ActionDownSubscribe, Content: targetUserID}
 	Send(userInfo.Conn, command)
 	logUtil.LOG_INFO("SUBSCRIBE : %s TO %s.", userInfo.UserID, targetUserID)
 }

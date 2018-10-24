@@ -11,7 +11,7 @@ import (
 // common #分割的命令行
 // *Command 返回值
 func GetCommon(common string) (entity.Command, error) {
-	c := strings.Split(common, constant.CONST_SPLITTER)
+	c := strings.Split(common, constant.Splitter)
 
 	if len(c) == 2 {
 		return entity.Command{Action: c[0], Content: c[1]}, nil
